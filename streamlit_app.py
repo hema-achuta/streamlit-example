@@ -1,38 +1,60 @@
-from collections import namedtuple
-import altair as alt
-import math
-import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.stats import mode
 import streamlit as st
 
-"""
-# Welcome to Streamlit!
 
-Edit `/streamlit_app.py` to customize this app to your heart's desire :heart:
+# Function to analyze the data
+def analyze_data(file_path):
+    data = np.loadtxt(file_path, skiprows=1, usecols=(0, 2))
 
-If you have any questions, checkout our [documentation](https://docs.streamlit.io) and [community
-forums](https://discuss.streamlit.io).
+    # Extract X-axis data
+    x_values = data[:, 0]
 
-In the meantime, below is an example of what you can do with just a few lines of code:
-"""
+    # Plotting
+    fig, ax = plt.subplots()
+    ax.plot(x_values, label='X-axis')
+    ax.set_xlabel('X-axis')
+    ax.set_title('X-axis Plot')
+
+    # Calculate the minimum and maximum values
+    min_value = np.min(x_values)
+    max_value = np.max(x_values)
+
+    # Highlight the minimum and maximum values with colored markers
+    ax.plot(np.argmin(x_values), min_value, 'b*', label=f'Min: {min_value:.2f}')
+    ax.plot(np.argmax(x_values), max_value, 'g^', label=f'Max: {max_value:.2f}')
+
+    ax.legend()
+
+    st.pyplot(fig)
+
+    return data
 
 
-with st.echo(code_location='below'):
-    total_points = st.slider("Number of points in spiral", 1, 5000, 2000)
-    num_turns = st.slider("Number of turns in spiral", 1, 100, 9)
+# Create the Streamlit app
+def main():
+    st.title('Data Analysis')
 
-    Point = namedtuple('Point', 'x y')
-    data = []
+    # File selection
+    file_path = st.file_uploader("Upload a .dat file", type=['dat'])
+    if file_path is not None:
+        data = analyze_data(file_path)
 
-    points_per_turn = total_points / num_turns
+        # Add buttons to show mean, median, and mode
+        if st.button('Show Mean'):
+            mean_value = np.mean(data[:, 1])
+            st.write("Mean:", mean_value)
 
-    for curr_point_num in range(total_points):
-        curr_turn, i = divmod(curr_point_num, points_per_turn)
-        angle = (curr_turn + 1) * 2 * math.pi * i / points_per_turn
-        radius = curr_point_num / total_points
-        x = radius * math.cos(angle)
-        y = radius * math.sin(angle)
-        data.append(Point(x, y))
+        if st.button('Show Median'):
+            median_value = np.median(data[:, 1])
+            st.write("Median:", median_value)
 
-    st.altair_chart(alt.Chart(pd.DataFrame(data), height=500, width=500)
-        .mark_circle(color='#0068c9', opacity=0.5)
-        .encode(x='x:Q', y='y:Q'))
+        if st.button('Show Mode'):
+            mode_value = mode(data[:, 1]).mode[0]
+            st.write("Mode:", mode_value)
+
+
+if __name__ == '__main__':
+    st.set_option('deprecation.showPyplotGlobalUse', False)
+    main()
