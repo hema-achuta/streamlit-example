@@ -1,5 +1,4 @@
 
-```
 # Data Analysis App
 
 This is a simple Streamlit app for analyzing data from a .dat file.
